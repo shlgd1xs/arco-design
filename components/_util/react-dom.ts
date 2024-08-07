@@ -102,12 +102,15 @@ export const findDOMNode = (element: any, instance?: ReactInstance) => {
     return element.current;
   }
 
-  if (element instanceof Component) {
-    return ReactDOM.findDOMNode(element);
-  }
-
+  // react 19 findDOMNode已经被废弃，调用直接报错，所以优先读取 getRootDOMNode 方法
   if (element && isFunction(element.getRootDOMNode)) {
     return element.getRootDOMNode();
+  }
+
+  if (element instanceof Component) {
+    if (ReactDOM.findDOMNode) {
+      return ReactDOM.findDOMNode(element);
+    }
   }
 
   // 一般 useImperativeHandle 的元素拿到的 ref 不是 dom 元素且不存在 getRootDOMNode ，会走到这里。
@@ -117,7 +120,9 @@ export const findDOMNode = (element: any, instance?: ReactInstance) => {
       'Element does not define the `getRootDOMNode` method causing a call to React.findDOMNode. but findDOMNode is deprecated in StrictMode. Please check the code logic',
       { element, instance }
     );
-    return ReactDOM.findDOMNode(instance);
+    if (ReactDOM.findDOMNode) {
+      return ReactDOM.findDOMNode(instance);
+    }
   }
 
   return null;
